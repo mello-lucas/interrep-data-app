@@ -1,0 +1,6 @@
+[theme]
+primaryColor = "#C9A227"              # dourado premium
+backgroundColor = "#0E0E10"           # preto grafite
+secondaryBackgroundColor = "#16181D"  # cards / sidebar
+textColor = "#F2F2F2"                 # off-white
+font = "sans serif"
