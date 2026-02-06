@@ -6,3 +6,10 @@ sources:
     tables:
       - name: support_registry
       - name: player_game_ingest
+
+  - name: silver
+    schema: silver
+    tables:
+      - name: support_registry
+      - name: player_game
+      - name: team_game
