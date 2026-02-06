@@ -2,3 +2,5 @@
 .env
 __pycache__/
 .streamlit/secrets.toml
+dbt/dbt_interrep/logs/
+dbt/dbt_interrep/target/
