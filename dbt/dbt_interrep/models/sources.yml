@@ -13,3 +13,8 @@ sources:
       - name: support_registry
       - name: player_game
       - name: team_game
+
+  - name: gold
+    schema: gold
+    tables:
+      - name: match_scoreboard
