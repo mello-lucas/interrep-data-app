@@ -18,3 +18,4 @@ sources:
     schema: gold
     tables:
       - name: match_scoreboard
+      - name: player_summary
