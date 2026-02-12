@@ -1,62 +1,73 @@
+
 # 🏗️ Interrep — Data App  
-## Roadmap Técnico & Experiência do Usuário Final
 
-Este documento apresenta **duas visões complementares** do projeto:
-
-1. **Plano de Execução (Tasks Técnicas)** — o que precisa ser construído, em ordem lógica  
-2. **Fluxo do Produto Final (Visão do Cliente)** — como o sistema funciona do ponto de vista do usuário
-
-O objetivo é deixar explícito **o que será feito**, **por quê** e **como cada parte se conecta**, seguindo boas práticas de Analytics Engineering.
+**Data product para análise de campeonatos esportivos, construído com arquitetura moderna de dados (RAW → SILVER → GOLD), dbt e Streamlit.**
 
 ---
 
-# 1️⃣ Plano de Execução — Tasks Técnicas
+## 📌 Overview
 
-## 1. Planejamento e Fonte de Dados
-- Definir layout final da planilha (schema estável)
-  - Identificadores únicos: jogador, jogo, campeonato, rodada
-  - Tipagem clara (int, float, date, text)
-- Definir regras de negócio explícitas:
-  - O que é um jogo válido
-  - Como lidar com jogadores ausentes
-  - Métricas primárias (gols, assistências, cartões)
+Interrep é um sistema analítico que transforma planilhas de resultados em métricas consolidadas e dashboards interativos.
 
----
+O projeto foi desenvolvido com foco em:
 
-## 2. Camada RAW — Ingestão
-**Objetivo:** persistir os dados exatamente como recebidos (sem lógica de negócio)
+- Arquitetura profissional de dados  
+- Modelagem dimensional (Star Schema)  
+- Separação clara entre ingestão, transformação e consumo  
+- Performance e governança  
+- Reprodutibilidade e idempotência  
 
-### Estrutura
-- `raw.mirror_base`
-  - Espelha 1:1 a planilha
-  - Append-only (nunca atualiza ou deleta)
+O usuário interage apenas com:
 
-### Implementação
-- Script Python de ingestão:
-  - Leitura do Excel (`pandas`)
-  - Validação mínima de schema
-  - Insert direto no PostgreSQL (Neon)
-- Alternativa (mais produto):
-  - Painel admin no Streamlit
-  - Upload do Excel
-  - Controle de permissões (admin-only)
+- Upload de planilha  
+- Dashboard analítico  
+
+Toda a engenharia de dados ocorre nos bastidores.
 
 ---
 
-## 3. Infraestrutura de Banco (Neon)
-- PostgreSQL serverless
-- Schemas separados:
-  - `raw`
-  - `silver`
-  - `gold`
-- Usuários distintos:
-  - `ingestion_user` → INSERT apenas em RAW
-  - `analytics_user` → SELECT em GOLD
+# 🧱 Arquitetura
+
+```
+Excel Upload
+     ↓
+RAW (append-only)
+     ↓
+SILVER (Star Schema)
+     ↓
+GOLD (tabelas analíticas)
+     ↓
+Streamlit Dashboard
+```
+
+## 🔹 Stack Tecnológica
+
+| Camada | Tecnologia |
+|--------|------------|
+| Banco | PostgreSQL (Neon - serverless) |
+| Transformação | dbt Core |
+| Ingestão | Python (pandas) |
+| Frontend | Streamlit |
+| Orquestração | GitHub Actions |
 
 ---
 
-## 4. Camada SILVER — Modelagem Dimensional
-**Objetivo:** criar um Star Schema limpo, consistente e reutilizável
+# 🗂 Estrutura de Camadas
+
+## 1️⃣ RAW
+
+- Espelhamento 1:1 da planilha
+- Estrutura append-only
+- Controle por `ingestion_at`
+- Nenhuma regra de negócio aplicada
+
+Objetivo: preservação fiel dos dados brutos.
+
+---
+
+## 2️⃣ SILVER
+
+Modelagem dimensional com dbt.
 
 ### Dimensões
 - `dim_player`
@@ -67,116 +78,136 @@ O objetivo é deixar explícito **o que será feito**, **por quê** e **como cad
 ### Fato
 - `fact_player_game_stats`
   - Grain: 1 jogador × 1 jogo
-  - Métricas atômicas
 
-### Ferramenta
-- `dbt Core`
-- Transformações declarativas (SQL)
-- Testes:
-  - `not_null`
-  - `unique`
-  - `relationships`
+Inclui:
+- Deduplicação
+- Padronização
+- Testes (`not_null`, `unique`, `relationships`)
+
+Objetivo: consistência e reutilização analítica.
 
 ---
 
-## 5. Camada GOLD — Tabelas Analíticas
-**Objetivo:** otimizar consultas para dashboards e métricas de negócio
+## 3️⃣ GOLD
 
-### Exemplos de Tabelas
+Tabelas otimizadas para consumo no dashboard.
+
+Exemplos:
+- `gold_match_scoreboard`
 - `gold_player_season_stats`
 - `gold_team_leaderboards`
-- `gold_match_summary`
 - `gold_championship_kpis`
 
-### Características
-- Dados já agregados
-- Regras de negócio consolidadas
-- Leitura rápida (baixo custo computacional)
+Características:
+- Métricas consolidadas
+- Agregações pré-computadas
+- Sem lógica pesada no front-end
+- Única camada consumida pelo Streamlit
 
 ---
 
-## 6. Orquestração e Automação
-- `dbt Core` executado via GitHub Actions
-- Gatilhos:
-  - Novo upload de dados
-  - Execução manual
-- Logs versionados
+# ⚙️ Pipeline de Dados
+
+## Ingestão
+
+1. Admin realiza upload da planilha
+2. Validação estrutural
+3. Inserção append-only na RAW
+
+## Transformação
+
+Executado via dbt:
+
+```
+RAW → SILVER → GOLD
+```
+
+- Construção do Star Schema
+- Regras de negócio consolidadas
+- Agregações finais
+
+## Orquestração
+
+- GitHub Actions
+- Execução automatizada
 - Reprocessamento idempotente
 
 ---
 
-## 7. Front-end — Streamlit
-- Conecta **apenas** ao schema `gold`
-- Dashboards:
-  - Ranking de jogadores
-  - Estatísticas por jogo
-  - Evolução temporal
-  - Comparações
+# 📊 Dashboard
+
+O aplicativo Streamlit:
+
+- Conecta apenas ao schema `gold`
+- Utiliza cache (`st.cache_data`)
+- Executa queries consolidadas
+- Permite filtros por:
+  - Ano
+  - Campeonato
+  - Time
+
+### Funcionalidades atuais
+
+- KPIs consolidados
+- Rankings de jogadores
+- Estatísticas por jogo
+- Destaque automático para artilheiro
+- Métricas como:
+  - % jogos com gol
+  - Blue cards
 
 ---
 
-## 8. Deploy
-- Streamlit Community Cloud
-- Neon Free Tier
-- GitHub como single source of truth
+# 🔐 Governança
+
+- Separação de usuários no banco:
+  - `ingestion_user` → INSERT em RAW
+  - `analytics_user` → SELECT em GOLD
+- Ingestão protegida (admin-only)
+- Arquitetura orientada a controle e auditabilidade
 
 ---
 
-# 2️⃣ Fluxo do Produto Final — Visão do Cliente
+# 🎯 Objetivo do Projeto
 
-## 👤 Perfil do Usuário
-- Organizador do campeonato
-- Jogadores
-- Público interessado em estatísticas
+Demonstrar na prática:
 
----
+- Arquitetura moderna de dados  
+- Analytics Engineering com dbt  
+- Modelagem dimensional real  
+- Construção de data products  
+- Boas práticas de performance e governança  
 
-## 🔁 Ciclo de Uso do Sistema
-
-### 1. Upload de Dados
-- Admin acessa o painel
-- Faz upload da planilha do campeonato
-- Sistema valida e salva os dados brutos
+O projeto evolui de dashboard esportivo para um **case completo de engenharia e produto analítico**.
 
 ---
 
-### 2. Processamento Automático
-- Pipeline é acionado automaticamente
-- Dados são:
-  - Organizados
-  - Normalizados
-  - Modelados em Star Schema
-  - Agregados para análises
+# 🚀 Próximos Passos
+
+- Métrica de Impacto Ofensivo  
+- Goal Share (participação nos gols do time)  
+- Comparação entre times  
+- Aba Campeonato (visão macro)  
+- Aba Jogadores (análise longitudinal)  
+- CRUD controlado para entidade Games  
 
 ---
 
-### 3. Consumo Analítico
-- Usuários acessam o app Streamlit
-- Visualizam:
-  - Rankings atualizados
-  - Estatísticas por jogador e jogo
-  - KPIs do campeonato
-- Sem atrasos, sem cálculos no front-end
+# 📌 Resumo
 
----
+Interrep é um projeto orientado a arquitetura.
 
-## 🧠 O Que o Cliente Ganha
+O usuário vê:
 
-- Dados confiáveis e auditáveis
-- Atualizações simples (apenas subir a planilha)
-- Métricas consistentes
-- Interface clara e rápida
-- Arquitetura moderna, escalável e sem custo
+- Planilhas  
+- Rankings  
+- KPIs  
 
----
+A engenharia por trás envolve:
 
-## 🧩 Diferencial Técnico
-- Arquitetura em camadas (RAW / SILVER / GOLD)
-- Modelagem dimensional explícita
-- dbt como motor central de transformação
-- Serverless real (Neon + Streamlit)
-
----
-
-📌 **Resumo Final:**  
-O usuário só interage com **planilhas e dashboards**, enquanto toda a complexidade de engenharia de dados fica encapsulada em uma arquitetura robusta, reproduzível e profissional.
+- Modelagem dimensional  
+- dbt  
+- Arquitetura em camadas  
+- Serverless  
+- Orquestração automatizada  
+- Governança de dados  
