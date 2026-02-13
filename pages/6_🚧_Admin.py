@@ -19,6 +19,11 @@ if password != get_secret("ADMIN_PASSWORD"):
 
 st.success("Acesso autorizado")
 
+if st.button("Atualizar dados"):
+    with st.spinner("Atualizando dados..."):
+        st.cache_data.clear()
+    st.success("Dados atualizados com sucesso.")
+
 file = st.file_uploader("Envie a planilha do jogo", type=["xlsx"])
 
 if not file:
