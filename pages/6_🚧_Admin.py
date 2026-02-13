@@ -4,6 +4,7 @@ from ingestion.parser import parse_excel
 from ingestion.loader import load_to_raw
 from ingestion.validators_file import validate_excel_structure
 from ingestion.validators_df import run_df_validations
+from utils.github_actions import trigger_dbt_build, wait_for_run
 
 st.title("Upload de Jogo")
 
@@ -19,11 +20,20 @@ if password != get_secret("ADMIN_PASSWORD"):
 
 st.success("Acesso autorizado")
 
+# pipeline rodar dbt e limpar cache
 if st.button("Atualizar dados"):
-    with st.spinner("Atualizando dados..."):
-        st.cache_data.clear()
-    st.success("Dados atualizados com sucesso.")
+    with st.spinner("Rodando pipeline..."):
+        run_id = trigger_dbt_build()
+        success = wait_for_run(run_id)
 
+        if success:
+            st.cache_data.clear()
+            st.success("Pipeline concluído com sucesso.")
+        else:
+            st.error("Pipeline falhou ou excedeu tempo.")
+
+
+# subir planilha
 file = st.file_uploader("Envie a planilha do jogo", type=["xlsx"])
 
 if not file:
