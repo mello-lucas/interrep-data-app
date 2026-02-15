@@ -1,203 +1,140 @@
-## 🗂️ Estrutura de Abas
+## Estrutura de Abas
 
-A aplicação é organizada nas seguintes abas principais:
+A aplicação está organizada nas abas abaixo:
 
-* Main
-* Jogos
-* Rankings
-* Partidas
-* Sobre
-* Admin
-
-Cada aba possui um escopo bem delimitado, descrito a seguir.
+- Main
+- Jogos
+- Times
+- Rankings
+- Sobre
+- Admin
 
 ---
 
-## 🏠 Main
+## Main
 
 ### Propósito
 
-Ponto de entrada da aplicação. Apresenta uma visão resumida do campeonato ativo.
+Ponto de entrada e identidade visual da aplicação.
 
-### Escopo
+### Escopo atual
 
-* Seleção de campeonato (quando aplicável)
-* KPIs simples e globais
-* Visão geral do estado dos dados
+- Configuração global da página
+- Título principal
+- Logo no sidebar
 
-### Conteúdos esperados
+### Fora do escopo atual
 
-* Total de jogos
-* Total de jogadores
-* Total de gols
-* Status do campeonato (em andamento / finalizado)
-
-### Fora do escopo
-
-* Análises temporais detalhadas
-* Comparações avançadas
-* Configurações
+- KPIs globais
+- Filtros analíticos
 
 ---
 
-## ⚽ Jogos
+## Jogos
 
 ### Propósito
 
-Gerenciar e visualizar os **jogos como entidades centrais do sistema**.
+Visualizar partidas e resultados consolidados.
 
-### Escopo
+### Escopo atual
 
-* Listagem de jogos
-* Visualização dos principais atributos
-* Criação, edição e exclusão de jogos (CRUD)
-
-### Conteúdos esperados
-
-* Data do jogo
-* Campeonato
-* Rodada
-* Times participantes
-* Placar
-* Status do jogo (agendado / realizado)
-
-### Regras importantes
-
-* Jogos são entidades **editáveis**
-* Resultados e estatísticas derivam dos jogos, mas não são editados aqui
-
-### Fora do escopo
-
-* Estatísticas avançadas por jogo
-* Histórico de alterações
-
----
-
-## 🏆 Rankings
-
-### Propósito
-
-Exibir rankings consolidados de jogadores com base em métricas objetivas.
-
-### Escopo
-
-* Rankings simples e diretos
-* Filtros básicos por campeonato
-
-### Conteúdos esperados
-
-* Ranking de gols
-* Ranking de assistências
-* Ranking de cartões
+- Filtro por campeonato
+- Filtro por rodada
+- Filtro por time
+- Tabela com jogo, placar e resultado (vitória/empate)
+- Lista detalhada das partidas filtradas
 
 ### Características
 
-* Dados derivados (read-only)
-* Ordenação clara e determinística
-* Sem ajustes manuais
+- Dados read-only vindos de `dbt_gold.match_scoreboard`
+- Sem edição de partidas
 
-### Fora do escopo
+### Fora do escopo atual
 
-* Rankings por posição
-* Métricas normalizadas (por jogo, por minuto)
-* Comparações entre jogadores
+- CRUD de jogos
+- Agendamento/alteração manual de partidas
 
 ---
 
-## 📋 Partidas
+## Times
 
 ### Propósito
 
-Detalhar o que aconteceu em cada jogo de forma estruturada.
+Analisar desempenho de um time e seus jogadores no período selecionado.
 
-### Escopo
+### Escopo atual
 
-* Visualização dos eventos por partida
-* Resumo estatístico simples
-
-### Conteúdos esperados
-
-* Lista de jogadores que atuaram
-* Gols, assistências e cartões por jogo
-* Estatísticas agregadas básicas
+- Filtro por ano, campeonato e time
+- KPIs de jogos, gols, assistências e cartões
+- Ranking de gols com destaque para artilheiro
+- Tabela de estatísticas por jogador
 
 ### Características
 
-* Dados totalmente derivados
-* Somente leitura (append-only na origem)
+- Dados read-only de `dbt_gold.player_summary`
+- Métricas agregadas por seleção de contexto
 
-### Fora do escopo
+### Fora do escopo atual
 
-* Linha do tempo detalhada
-* Eventos avançados (xG, mapas de calor)
-
----
-
-## ℹ️ Sobre
-
-### Propósito
-
-Fornecer contexto institucional e técnico sobre o projeto.
-
-### Escopo
-
-* Explicação do que é o Interrep
-* Público-alvo
-* Visão geral do funcionamento dos dados
-
-### Conteúdos esperados
-
-* Descrição do projeto
-* Frequência de atualização dos dados
-* Limitações do MVP
-
-### Fora do escopo
-
-* Documentação técnica detalhada
-* Roadmap completo
+- Comparações históricas multi-temporada
+- Métricas avançadas (xG, etc.)
 
 ---
 
-## 🔐 Admin
+## Rankings
 
 ### Propósito
 
-Área restrita para ingestão e manutenção dos dados.
+Exibir rankings consolidados de jogadores e tabela de times.
 
-### Escopo
+### Escopo atual
 
-* Upload de arquivos de dados
-* Validações estruturais e semânticas
-* Carga append-only na camada RAW
+- Filtro por ano e campeonato
+- Top 5 jogadores por gols, assistências e defesas
+- Tabela de classificação de times (Pts, J, V, E, D, GP, GC, SG)
+- Destaques top 5 de ataque, defesa e saldo
 
 ### Características
 
-* Acesso restrito
-* Operações administrativas apenas
+- Dados read-only de `dbt_gold.player_summary` e `dbt_gold.team_summary`
+- Ordenação determinística
 
-### Fora do escopo
+### Fora do escopo atual
 
-* Edição direta de resultados históricos
-* Visualizações analíticas
-
----
-
-## 🚧 Itens Explicitamente Fora do MVP
-
-Os itens abaixo **não fazem parte do MVP**, mas são considerados evoluções naturais:
-
-* Star Schema completo
-* Métricas avançadas
-* Comparações históricas profundas
-* Auditoria detalhada
-* Exportação de dados
-* Dashboards exploratórios complexos
+- Rankings por posição/tipo de atleta
+- Normalização por minuto
 
 ---
 
-## 📌 Princípios de Design do MVP
+## Sobre
 
-* Simplicidade operacional
-* Clareza semântica
-* Dados confiáveis > dados sofisticados
-* Preparação para crescimento sem refatoração
+### Propósito
+
+Apresentar contexto institucional do projeto.
+
+### Escopo atual
+
+- Descrição do Interrep
+- Objetivo do produto
+- Resumo do conteúdo disponível
+
+---
+
+## Admin
+
+### Propósito
+
+Executar operações administrativas de ingestão e atualização analítica.
+
+### Escopo atual
+
+- Autenticação por senha (`ADMIN_PASSWORD`)
+- Disparo manual do pipeline de `dbt build` via GitHub Actions
+- Upload de planilha Excel
+- Validação estrutural e semântica
+- Pré-visualização e confirmação de carga na RAW
+
+### Características
+
+- Área restrita
+- Carga append-only em `raw.player_game_ingest`
